@@ -10,7 +10,15 @@ const morgan = require('morgan')
 require('dotenv').config();
 const app = express()
 
-app.use(cors());
+
+const corsOptions = {
+    origin: true,
+    credentials: true,
+    allowedHeaders: 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,Forest-Context-Url',
+    methods: 'GET, PUT, PATCH, DELETE, POST'
+};
+
+app.use(cors(corsOptions));
 app.use(morgan("dev"))
 
 
@@ -37,7 +45,7 @@ app.use('/api/hotel', hotelRoutes)
 
 
 const server = app.listen(process.env.PORT, () => {
-    console.log(`server started at port${process.env.PORT}`)
+    console.log(`server started at port ${process.env.PORT}`)
 })
 
 
