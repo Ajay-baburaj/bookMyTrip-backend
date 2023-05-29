@@ -6,10 +6,12 @@ const authRoutes = require('./routes/authRoutes')
 const adminRoutes = require('./routes/adminRoutes')
 const hotelRoutes = require('./routes/hotelRoutes')
 const cookieParser = require("cookie-parser");
+const morgan = require('morgan')
 require('dotenv').config();
 const app = express()
 
 app.use(cors());
+app.use(morgan("dev"))
 
 
 
