@@ -645,11 +645,18 @@ module.exports.validateUserForReview = async (req, res, next) => {
         const checkOutDate = moment(booking?.checkOutDate)
         const duration = moment.duration(currentDate.diff(checkOutDate))
         const differenceInDays = Math.round(duration.asDays())
-        console.log(differenceInDays)
-        if (differenceInDays <= 7 && differenceInDays > 0) {
+        const hoteldetails = await hotelModel.findById(hotel)
+        const reviewId  = booking?._id + user
+        const userExists = hoteldetails.reviews.some(review => JSON.stringify(review.reviewId) === JSON.stringify(reviewId));
+
+        if (differenceInDays <= 7 && differenceInDays > 0 && !userExists) {
             res.status(200).json({ status: true, msg: 'you can enter the review' })
         } else {
-            res.status(200).json({ status: false, msg: 'you havent visited the hotel recently' })
+            if(userExists){
+                res.status(200).json({status:false,msg:'you can only add one review'})
+            }else{
+                res.status(200).json({ status: false, msg: 'you havent visited the hotel recently' })
+            }
         }
     }catch(err){
         console.log(err.message)
@@ -660,9 +667,12 @@ module.exports.validateUserForReview = async (req, res, next) => {
 module.exports.writeReview = async (req, res, next) => {
     try {
         const { username, userId, hotel, review } = req.body
+        const bookings = await bookingModel.find({ userId, hotel, status: 'completed' }).sort({ checkOutDate: -1 })
+        const booking = bookings[0]
+        const reviewId = booking?._id+userId;
         const review_id = generateUniqueRandomNumber()
         const reviewObj = {
-            review_id,
+            reviewId,
             username,
             userId,
             hotel,
@@ -711,10 +721,9 @@ module.exports.deleteReview = async (req, res) => {
     try {
         const hotelId = req.query.hotel;
         const reviewId = req.query.reviewId;
-        console.log(hotelId, reviewId)
-
+    
         const deletedReview = await hotelModel.findByIdAndUpdate(hotelId, {
-            $pull: { 'reviews': { review_id: reviewId } }
+            $pull: { 'reviews': { reviewId: reviewId } }
         });
 
         res.status(200).json({ status: true, msg: "review deleted" });
@@ -722,7 +731,6 @@ module.exports.deleteReview = async (req, res) => {
         console.log(err.message);
     }
 };
-
 
 module.exports.addGuestDetails = async (req, res, next) => {
     const { guestName } = req.body;
